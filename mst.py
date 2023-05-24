@@ -1,63 +1,54 @@
-class Graph:
-    def __init__(self, vertices):
-        self.V = vertices
-        self.graph = []
+from collections import defaultdict
+import heapq
 
-    def add_edge(self, src, dest, weight):
-        self.graph.append([src, dest, weight])
-
-    def find(self, parent, i):
-        if parent[i] == i:
-            return i
-        return self.find(parent, parent[i])
-
-    def union(self, parent, rank, x, y):
-        xroot = self.find(parent, x)
-        yroot = self.find(parent, y)
-
-        if rank[xroot] < rank[yroot]:
-            parent[xroot] = yroot
-        elif rank[xroot] > rank[yroot]:
-            parent[yroot] = xroot
-        else:
-            parent[yroot] = xroot
-            rank[xroot] += 1
-
-    def kruskal_mst(self):
-        result = []
-        i = 0
-        e = 0
-        self.graph = sorted(self.graph, key=lambda item: item[2])
-        parent = []
-        rank = []
-
-        for node in range(self.V):
-            parent.append(node)
-            rank.append(0)
-
-        while e < self.V - 1:
-            src, dest, weight = self.graph[i]
-            i += 1
-            x = self.find(parent, src)
-            y = self.find(parent, dest)
-
-            if x != y:
-                e += 1
-                result.append([src, dest, weight])
-                self.union(parent, rank, x, y)
-
-        # Print the MST
-        print("Minimum Spanning Tree:")
-        for src, dest, weight in result:
-            print(f"{src} -- {dest}    Weight:{weight}")
-
+def minimum_spanning_tree(graph):
+    # Create a defaultdict to store the adjacency list representation of the graph
+    adj_list = defaultdict(list)
+    
+    # Convert the graph into adjacency list format
+    for u, v, weight in graph:
+        adj_list[u].append((v, weight))
+        adj_list[v].append((u, weight))
+    
+    # Starting vertex for MST (can be any vertex)
+    start_vertex = list(adj_list.keys())[0]
+    
+    # Set to store the visited vertices
+    visited = set([start_vertex])
+    
+    # Priority queue to store the edges based on their weights
+    edges = [(weight, start_vertex, v) for v, weight in adj_list[start_vertex]]
+    heapq.heapify(edges)
+    
+    # Minimum spanning tree
+    mst = []
+    
+    # Iterate until all vertices are visited or all edges are explored
+    while edges:
+        weight, u, v = heapq.heappop(edges)
+        
+        if v not in visited:
+            visited.add(v)
+            mst.append((u, v, weight))
+            
+            for next_v, next_weight in adj_list[v]:
+                if next_v not in visited:
+                    heapq.heappush(edges, (next_weight, v, next_v))
+    
+    return mst
 
 # Example usage
-g = Graph(4)
-g.add_edge(0, 1, 10)
-g.add_edge(0, 2, 6)
-g.add_edge(0, 3, 5)
-g.add_edge(1, 3, 15)
-g.add_edge(2, 3, 4)
+graph = [
+    ('A', 'B', 4),
+    ('A', 'C', 3),
+    ('B', 'C', 6),
+    ('B', 'D', 1),
+    ('C', 'D', 3),
+    ('D', 'E', 4)
+]
 
-g.kruskal_mst()
+mst = minimum_spanning_tree(graph)
+
+# Print the minimum spanning tree
+for u, v, weight in mst:
+    print(f"{u} -- {v} : {weight}")
